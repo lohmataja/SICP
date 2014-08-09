@@ -108,4 +108,29 @@
 ;(sum-sq-even 1 10) ;220
 ;(sum-sq-even 3 7) ;52
 
+;;; ex.1.34
+(define (f g)
+  (g 2))
+; (f f) throws an error because it will eventually expand to (2 2) and 2 is not a procedure.
 
+;;; ex.1.42
+(define (compose f g)
+  (lambda (x) (f (g x))))
+;((compose sq inc) 6)
+
+;;; ex.1.43
+(define (repeated f n)
+  (if (= n 1)
+      f
+      (compose f (repeated f (- n 1)))))
+;((repeated sq 2) 5) ;625
+
+;;; ex.1.44
+(define (average-3 x y z)
+  (/ (+ x y z) 3.))
+(define (smoothed f dx)
+  (lambda (x) (average-3 (f (- x dx)) (f x) (f (+ x dx)))))
+;((smoothed sq 1) 3)
+(define (smoothed-n-fold f dx n)
+  (repeated (smoothed f dx) n))
+((smoothed-n-fold sq 1 2) 3)
