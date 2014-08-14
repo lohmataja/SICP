@@ -1,7 +1,9 @@
-#lang planet neil/sicp
+#lang racket
+(require racket/trace)
 ;;; ex. 1.29
 ;integral from the book
 (define (cube x) (* x x x))
+
 (define (sum term a next b)
   (if (> a b)
       0
@@ -21,6 +23,7 @@
        (- (+ (* 2 (sum f a add-h b))
              (* 2 (sum f (+ a h) add-2h (- b h))))
           (+ (f a) (f b))))))
+
 ;(integral cube 0 1 0.01)
 ;(simpson cube 0 1. 100)
 ;(integral cube 0 1 0.001)
@@ -33,6 +36,7 @@
         result
         (iter (next a) (+ (term a) result))))
   (iter a 0))
+(define (inc x) (+ x 1))
 ;(sum cube 1 inc 10)
 ;(sum-iter cube 1 inc 10)
 
@@ -49,8 +53,14 @@
 ; factorial through product
 (define (fact-alt n)
   (product id 1 inc n))
-;(fact-alt 5)
-
+(trace fact-alt)
+(fact-alt 5)
+(define (fact x)
+  (if (<= x 1)
+      1
+      (* x (fact (- x 1)))))
+;(trace fact)
+;(fact 5)
 ; pi estimate through product
 (define (num i)
   (+ (* (ceiling (/ i 2))
@@ -65,12 +75,10 @@
 (define (pi-est n)
   (* (product pi-term 0 inc n)
      4))
-;(display (pi-est 10))
-;(newline)
-;(display (pi-est 100))
-;(newline)
-;(display (pi-est 1000))
-
+;(pi-est 10)
+;(pi-est 100)
+;(pi-est 1000)
+;(pi-est 10000)
 
 ;;; ex.1.32
 ;recursive
@@ -111,7 +119,7 @@
 ;;; ex.1.34
 (define (f g)
   (g 2))
-; (f f) throws an error because it will eventually expand to (2 2) and 2 is not a procedure.
+;(f f) ;throws an error because it will eventually expand to (2 2) and 2 is not a procedure.
 
 ;;; ex.1.42
 (define (compose f g)
@@ -130,7 +138,23 @@
   (/ (+ x y z) 3.))
 (define (smoothed f dx)
   (lambda (x) (average-3 (f (- x dx)) (f x) (f (+ x dx)))))
-;((smoothed sq 1) 3)
+((smoothed sq 1) 3)
 (define (smoothed-n-fold f dx n)
-  (repeated (smoothed f dx) n))
-((smoothed-n-fold sq 1 2) 3)
+  (lambda (x)
+    (if (= n 1)
+         ((smoothed f dx) x)
+         (average-3 ((smoothed-n-fold f dx (- n 1)) (- x dx))
+                    ((smoothed-n-fold f dx (- n 1)) x)
+                    ((smoothed-n-fold f dx (- n 1)) (+ x dx))))))
+;(trace smoothed-n-fold)
+;((smoothed-n-fold sq 1 5) 0)
+;;; ex.1.46
+(define (iterative-improve good-enough? improve)
+  (lambda (guess) (if (good-enough? guess)
+                      guess
+                      ((iterative-improve good-enough? improve) (improve guess)))))
+(define (sq-good? x)
+  (lambda (guess) (< (abs (- (sq guess) x)) 0.001)))
+(define (improve-sq x)
+  (lambda (guess) (/ (+ guess (/ x guess)) 2.)))
+;((iterative-improve (sq-good? 2.) (improve-sq 2.)) 1)
